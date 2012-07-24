@@ -12,6 +12,8 @@
 
 
 import os
+import json
+import re
 
 # relative path to the ExtJS src folder without trailing slash
 extSrcPath = '../../htdocs/extjs/4.1.0/src'
@@ -28,14 +30,26 @@ def getFolderContents(path=extSrcPath):
     files = []
 
     for item in folderItems:
-        # this is a folder.  create a dictionary to hold the folders contents and call the getFolderContents method
         if os.path.isdir(path + '/' + item):
+        # this is a folder.
+        # create a dictionary to hold the folders contents and call the getFolderContents method
             folder = {}
             folder[item] = getFolderContents(path + '/' + item)
             files.append(folder)
         else:
         # this is a file
             files.append(item)
+            # open the file
+            openItem = open(path + '/' + item, "rt")
+            # read the file
+            openItemText = openItem.read()
+            # search for any string before an ':' in openItemText and store in findColon as a list
+            findColon = re.findall('((\w)*?)(:|( :))', openItemText)
+            # findColon holds something that looks like "('getBy', 'y', ' :', ' :')"
+            # iterate through each list in the findColon list and only print out the first item
+            for i in findColon:
+                print(i[0])
+            openItem.close
 
     return files
 
@@ -43,5 +57,7 @@ def getFolderContents(path=extSrcPath):
 #call it
 extSrcContents["root"] = getFolderContents()
 
-#print out the json object
-print(extSrcContents)
+# create the files.json file and dump the extSrcContents dictionary
+allFiles = open("allFiles.json", "w+", encoding="utf-8")
+allFiles.write(json.dumps(extSrcContents, indent=4))
+allFiles.close()
